@@ -35,6 +35,8 @@ function MyObjectShould::exist() {
 
 function MyObjectShould::have_a_property() {
    expect(MyObject.property).toEqual("value");
+   expect(MyObject.property).toHave(1).word();
+   expect(MyObject.property).not().toHave(4).words();
 }
 
 //-----------------------------------------------------------------------------

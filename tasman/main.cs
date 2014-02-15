@@ -4,7 +4,7 @@
 new ScriptObject(Tasman) {
    suites = new SimSet();
    reporter = new ScriptObject(TasmanConsoleReporter) {
-      verbose = true;
+      verbose = false;
    };
 };
 
@@ -30,7 +30,6 @@ function Tasman::runAll(%this) {
          // instance of the SomethingShould base class.
          if(!%dummy.isMethod(%method)) {
             %suite._currentMethod = %method;
-            %suite.count++;
 
             // Run the test!
             if(%suite.isMethod("before")) {
@@ -116,17 +115,55 @@ function Expectation::toBeAnObject(%this) {
 }
 
 function Expectation::toBeDefined(%this) {
-   %this._test(%this.value !$= "", "expected a non-empty string");
+   %message = %this.inverted ? "expected an empty string" : "expected a non-empty string";
+   %this._test(%this.value !$= "", %message);
+   return %this;
+}
+
+function Expectation::toBe(%this, %target) {
+   %messagePart = %this.inverted ? "not to be" : "to be";
+   %this._test(%this.value == %target, "expected" SPC %this.value SPC %messagePart SPC %target);
    return %this;
 }
 
 function Expectation::toEqual(%this, %target) {
-   %this._test(%this.value $= %target, "expected" SPC %this.value SPC "to equal" SPC %target);
+   %messagePart = %this.inverted ? "not to equal" : "to equal";
+   %this._test(%this.value $= %target, "expected" SPC %this.value SPC %messagePart SPC %target);
    return %this;
+}
+
+function Expectation::toBeAVector3(%this) {
+   %passing = getWordCount(%this.value) == 3;
+   if(%passing) {
+      for(%i = 0; %i < getWordCount(%this.value); %i++) {
+         %word = getWord(%this.value, %i);
+         // Check for numeric values, which are unaltered by addition with 0.
+         %pasing = %passing && (%word + 0 $= %word);
+      }
+   }
+   %message = (%this.inverted ? "not " : "") @ "to be a numeric 3D vector";
+   %this._test(%passing, "expected" SPC %this.value SPC %message);
+   return %this;
+}
+
+function Expectation::toHave(%this, %num) {
+   %this.target = %num;
+   return %this;
+}
+
+function Expectation::words(%this) {
+   %message = %this.inverted ? "not to have" : "to have";
+   %this._test(getWordCount(%this.value) == %this.target,
+      "expected \"" @ %this.value @ "\"" SPC %message SPC %this.target SPC "words");
+   return %this;
+}
+function Expectation::word(%this) {
+   return %this.words();
 }
 
 function Expectation::_test(%this, %pred, %failMessage) {
    %pass = %this.inverted ? !%pred : %pred;
+   %this.suite.count++;
    if(%pass) {
       %this.suite.passes++;
    } else {
