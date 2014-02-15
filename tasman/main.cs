@@ -8,6 +8,8 @@ new ScriptObject(Tasman) {
 
 function Tasman::runAll(%this) {
    %this.reporter.begin("_all");
+   %dummy = new ScriptObject() { class = SomethingShould; };
+
    foreach(%suite in Tasman.suites) {
       %this.reporter.begin(%suite.subject);
       %this._currentSuite = %suite;
@@ -20,12 +22,13 @@ function Tasman::runAll(%this) {
       %methods = %tester.dumpMethods();
 
       for(%i = 0; %i < %methods.count(); %i++) {
-         %info = %methods.getValue(%i);
-         %declaredIn = getRecord(%info, 3);
-         if(%declaredIn !$= "" && -1 != strpos(%declaredIn, ".spec.cs")) {
-            %suite.count++;
-            %method = %methods.getKey(%i);
+         %method = %methods.getKey(%i);
+
+         // We only want methods unique to this tester, so we compare against an
+         // instance of the SomethingShould base class.
+         if(!%dummy.isMethod(%method)) {
             %suite._currentMethod = %method;
+            %suite.count++;
 
             // Run the test!
             if(%suite.isMethod("before")) {
@@ -51,6 +54,8 @@ function Tasman::runAll(%this) {
 
       %this._currentSuite = "";
    }
+
+   %dummy.delete();
    %this.reporter.end();
 }
 
@@ -103,8 +108,13 @@ function Expectation::not(%this) {
    return %this;
 }
 
+function Expectation::toBeAnObject(%this) {
+   %this._test(isObject(%this.value), "expected" SPC %this.value SPC "to be an object");
+   return %this;
+}
+
 function Expectation::toBeDefined(%this) {
-   %this._test(%this.value !$= "", "expected" SPC %this.value SPC "to be defined");
+   %this._test(%this.value !$= "", "expected a non-empty string");
    return %this;
 }
 
