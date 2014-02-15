@@ -3,7 +3,9 @@
 
 new ScriptObject(Tasman) {
    suites = new SimSet();
-   reporter = new ScriptObject(TasmanConsoleReporter);
+   reporter = new ScriptObject(TasmanConsoleReporter) {
+      verbose = true;
+   };
 };
 
 function Tasman::runAll(%this) {
@@ -138,10 +140,10 @@ function Expectation::_test(%this, %pred, %failMessage) {
 function TasmanConsoleReporter::begin(%this, %group) {
    if(%group $= "_all") {
       %this.depth = 0;
-      echo("==================================================");
-      echo("Running Tasman test suite!");
+      echo("\c8==================================================");
+      echo("\c8Running Tasman test suite!");
       echo("");
-   } else {
+   } else if(%this.verbose) {
       echo("Testing" SPC %group @ "...");
    }
    %this.depth++;
@@ -150,8 +152,11 @@ function TasmanConsoleReporter::begin(%this, %group) {
 function TasmanConsoleReporter::end(%this) {
    %this.depth--;
    if(0 == %this.depth) {
-      echo("That concludes this Tasman test session");
-      echo("==================================================");
+      if(!%this.verbose) {
+         echo("");
+      }
+      echo("\c8That concludes this Tasman test session");
+      echo("\c8==================================================");
    }
 }
 
@@ -159,7 +164,10 @@ function TasmanConsoleReporter::reportSuite(%this, %suite) {
    if(%suite.fails > 0) {
       error(%suite.subject SPC "failed" SPC %suite.fails SPC "of" SPC %suite.count);
    } else {
-      echo(%suite.subject SPC "passed" SPC %suite.passes SPC "of" SPC %suite.count);
+      echo("\c9" @ %suite.subject SPC "passed" SPC %suite.passes SPC "of" SPC %suite.count);
    }
-   echo("");
+
+   if(%this.verbose) {
+      echo("");
+   }
 }
