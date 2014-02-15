@@ -24,11 +24,16 @@ function Tasman::runAll(%this) {
          %declaredIn = getRecord(%info, 3);
          if(%declaredIn !$= "" && -1 != strpos(%declaredIn, ".spec.cs")) {
             %suite.count++;
-            // Run a test!
+            %method = %methods.getKey(%i);
+            %suite._currentMethod = %method;
+
+            // Run the test!
             if(%suite.isMethod("before")) {
                %suite.before();
             }
+
             %tester.call(%methods.getKey(%i));
+
             if(%suite.isMethod("after")) {
                %suite.after();
             }
@@ -42,6 +47,7 @@ function Tasman::runAll(%this) {
       %suite.passes = 0;
       %suite.fails = 0;
       %suite.count = 0;
+      %suite._currentMethod = "";
 
       %this._currentSuite = "";
    }
@@ -98,38 +104,52 @@ function Expectation::not(%this) {
 }
 
 function Expectation::toBeDefined(%this) {
-   %this._test(%this.value !$= "");
+   %this._test(%this.value !$= "", "expected" SPC %this.value SPC "to be defined");
    return %this;
 }
 
 function Expectation::toEqual(%this, %target) {
-   %this._test(%this.value $= %target);
+   %this._test(%this.value $= %target, "expected" SPC %this.value SPC "to equal" SPC %target);
    return %this;
 }
 
-function Expectation::_test(%this, %pred) {
+function Expectation::_test(%this, %pred, %failMessage) {
    %pass = %this.inverted ? !%pred : %pred;
    if(%pass) {
       %this.suite.passes++;
    } else {
       %this.suite.fails++;
+      %niceMethod = strreplace(%this.suite._currentMethod, "_", " ");
+      error(%this.suite.subject SPC "should" SPC %niceMethod @ ":" SPC %failMessage);
    }
    return %this;
 }
 
 function TasmanConsoleReporter::begin(%this, %group) {
-   if(%group !$= "_all") {
+   if(%group $= "_all") {
+      %this.depth = 0;
+      echo("==================================================");
+      echo("Running Tasman test suite!");
+      echo("");
+   } else {
       echo("Testing" SPC %group @ "...");
    }
+   %this.depth++;
 }
 
 function TasmanConsoleReporter::end(%this) {
+   %this.depth--;
+   if(0 == %this.depth) {
+      echo("That concludes this Tasman test session");
+      echo("==================================================");
+   }
 }
 
 function TasmanConsoleReporter::reportSuite(%this, %suite) {
    if(%suite.fails > 0) {
-      error("Failed" SPC %suite.fails SPC "of" SPC %suite.count);
+      error(%suite.subject SPC "failed" SPC %suite.fails SPC "of" SPC %suite.count);
    } else {
-      echo("Passed" SPC %suite.passes SPC "of" SPC %suite.count);
+      echo(%suite.subject SPC "passed" SPC %suite.passes SPC "of" SPC %suite.count);
    }
+   echo("");
 }

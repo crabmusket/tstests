@@ -31,5 +31,5 @@ function adder(%a, %b) {
 }
 
 function adderShould::add_numbers() {
-   expect(adder(1, 2)).toEqual(3);
+   expect(adder(1, 2)).toEqual(4);
 }

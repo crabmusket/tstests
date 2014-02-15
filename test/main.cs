@@ -10,7 +10,6 @@ function onEnd() {
 }
 
 function GameConnection::onEnterGame() {
-   cls();
    toggleConsole(true);
    Tasman.runAll();
    Tasman.cleanUp();
