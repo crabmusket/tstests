@@ -22,6 +22,7 @@ test(MyObject);
 function MyObjectTests::before() {
    new ScriptObject(MyObject) {
       property = "value";
+      vector = "1 2 3";
    };
 }
 
@@ -34,9 +35,13 @@ function MyObjectShould::exist() {
 }
 
 function MyObjectShould::have_a_property() {
-   expect(MyObject.property).toEqual("value");
    expect(MyObject.property).toHave(1).word();
-   expect(MyObject.property).not().toHave(4).words();
+   expect(MyObject.property).toEqual("value");
+}
+
+function MyObjectShould::have_a_vector() {
+   expect(MyObject.vector).toBeDefined();
+   expect(MyObject.vector).not().toHave(3).words();
 }
 
 //-----------------------------------------------------------------------------
