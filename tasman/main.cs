@@ -157,9 +157,25 @@ function Expectation::words(%this) {
       "expected \"" @ %this.value @ "\"" SPC %message SPC %this.target SPC "words");
    return %this;
 }
-function Expectation::word(%this) {
-   return %this.words();
+function Expectation::word(%this) { return %this.words(); }
+
+function Expectation::fields(%this) {
+   %message = %this.inverted ? "not to have" : "to have";
+   %this._test(getFieldCount(%this.value) == %this.target,
+      "expected \"" @ %this.value @ "\"" SPC %message SPC %this.target SPC "tab-separated fields");
+   return %this;
 }
+function Expectation::field(%this) { return %this.fields(); }
+
+function Expectation::lines(%this) {
+   %message = %this.inverted ? "not to have" : "to have";
+   %this._test(getRecordCount(%this.value) == %this.target,
+      "expected \"" @ %this.value @ "\"" SPC %message SPC %this.target SPC "lines");
+   return %this;
+}
+function Expectation::line(%this) { return %this.lines(); }
+function Expectation::records(%this) { return %this.lines(); }
+function Expectation::record(%this) { return %this.lines(); }
 
 function Expectation::_test(%this, %pred, %failMessage) {
    %pass = %this.inverted ? !%pred : %pred;
